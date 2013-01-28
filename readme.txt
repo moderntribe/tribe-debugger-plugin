@@ -11,6 +11,7 @@ Stable tag: 1.0
 You can use this plugin to manually log data or to capture logging on WordPress actions. You can capture load time, memory, backrace, data dumps, urls, and server IPs.
 
 Firstly, you can manually log things using the following function:
+
 `do_action('log',$message,$group,$data);`
 
 The $group allows you to selectively output logging based on groups of log messages. The $message is the string you want to see in the log. $data is an optional parameter for the data that you want to display in the log (objects, arrays, or any other sort of data really).

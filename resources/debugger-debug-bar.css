@@ -1,0 +1,46 @@
+/* Debug Bar and Support Form */
+
+div#debugger-debug-bar ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+
+div#debugger-debug-bar li {
+	padding: 0px;
+	display: block;
+	margin-bottom: 6px;
+	background-color: #F4F4F4;
+	border: #eee solid 1px;
+}
+
+div#debugger-debug-bar li div.debugger-debug-entry-title {
+	font-weight: bold;
+	padding: 10px;
+	margin: 0;
+	background-color: #eee;
+}
+
+div#debugger-debug-bar li div.debugger-debug-entry-data {
+	padding: 10px;
+}
+
+div#debugger-debug-bar li.debugger-debug-warning,
+div#debugger-debug-bar li.debugger-debug-notice {
+	background-color: #fffcee;
+	border: #E6DB55 solid 1px;
+}
+
+div#debugger-debug-bar li.debugger-debug-warning div.debugger-debug-entry-title,
+div#debugger-debug-bar li.debugger-debug-notice div.debugger-debug-entry-title {
+	background-color: #E6DB55;
+}
+
+div#debugger-debug-bar li.debugger-debug-error {
+	background-color: #fee;
+	border: #D66 solid 1px;
+}
+
+div#debugger-debug-bar li.debugger-debug-error div.debugger-debug-entry-title {
+	background-color: #D66;
+}

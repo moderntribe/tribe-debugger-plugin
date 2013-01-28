@@ -3,7 +3,7 @@
 Plugin Name:	Debugger Plugin
 Description:	Code for debugging code
 Author:			Modern Tribe, Inc.
-Version:		1.0
+Version:		1.1
 Author URI:		http://tri.be
 
 Usage:
@@ -11,23 +11,23 @@ Usage:
 You can use this plugin to manually log data or to capture logging on WordPress actions. You can capture load time, memory, backrace, data dumps, urls, and server IPs.
 
 Firstly, you can manually log things using the following function:
-do_action('log',$message,$group,$data);
+do_action( 'log', $message, $group, $data );
 
 The $group allows you to selectively output logging based on groups of log messages. The $message is the string you want to see in the log. $data is an optional parameter for the data that you want to display in the log (objects, arrays, or any other sort of data really).
 
 To render messages to the log, you must configure wp-config.php as follows:
 
 // Run debug on only these groups. Use 'ALL' to debug everything. The group 'ACTIONS' is reserved for WordPress actions.
-define('DEBUG_GROUPS','ACTIONS,default,myspecialgroup');
+define( 'DEBUG_GROUPS', 'ACTIONS,default,myspecialgroup' );
 
 // Display these outputs in the log for each log message.
-define('DEBUG_PARAMS','time,memory,data,backtrace,url,server');
+define( 'DEBUG_PARAMS', 'time,delta,memory,data,backtrace,url,server' );
 
 // WordPress actions that you wish to log.
-define('DEBUG_ACTIONS','wp_head,switch_theme,wp_footer');
+define( 'DEBUG_ACTIONS', 'wp_head,switch_theme,wp_footer' );
 
 // WordPress actions that you wish to log.
-define('DEBUG_URLS','myurl.com');
+define( 'DEBUG_URLS', 'myurl.com' );
 
 
 TODO:
@@ -73,30 +73,30 @@ if ( !class_exists('Debugger') ) {
 			}
 			return self::$instance;
 		}
-		
+
 		const PLUGIN_DOMAIN = 'debugger';
 
 		// Debug vars
 		/*private static $groups = array('ACTIONS','default');
 		private static $parameters = array('time','memory','data','backtrace','url','server');
 		private static $actions = array('wp_head','switch_theme','wp_footer');*/
-		private static $groups = array('ALL');
-		private static $parameters = array('time','memory','data','backtrace','url','server');
+		private static $groups = array( 'ALL' );
+		private static $parameters = array( 'time', 'delta', 'memory', 'data', 'backtrace', 'url', 'server' );
 		private static $actions = array();
 		private static $ok_urls = false;
-		
+
 		// Constructor
 		public function __construct() {
 			// Set logger to default to error_log.
-			add_action('debugger_render_log_entry',array($this,'renderLog'),10,3);
-			
+			add_action( 'debugger_render_log_entry', array( $this, 'renderLog' ), 10, 3 );
+
 			// Action for people to log messages to.
-			add_action('log',array($this,'log'),1,3);
-			
+			add_action( 'log', array( $this, 'log' ), 1, 3 );
+
 			// Set up vars once plugins are loaded.
-			add_action('plugins_loaded',array($this,'setUpVars'),10);
+			add_action( 'plugins_loaded', array( $this, 'setUpVars' ), 10 );
 		}
-		
+
 		// Set up vars
 		public function setUpVars() {
 
@@ -113,7 +113,7 @@ if ( !class_exists('Debugger') ) {
 			if (defined('DEBUG_URLS')) {
 				self::$ok_urls = apply_filters('debugger_urls',explode(',',DEBUG_URLS));
 			}
-								
+
 			// Hook into all the actions in the config
 			if (is_array(self::$actions) && count(self::$actions)>0) {
 				foreach (self::$actions as $k => $action) {
@@ -131,25 +131,33 @@ if ( !class_exists('Debugger') ) {
 
 		// Log messages
 		public function log($message='Log Message',$group='default',$data=null) {
-			// If URLs are specified then check that the logging url matches the url specified 
+			// If URLs are specified then check that the logging url matches the url specified
 			if (is_array(self::$ok_urls) && !in_array($_SERVER["HTTP_HOST"],self::$ok_urls)) {
 				return;
 			}
-			
+
 			// Check to see if group reporting is set in config
 			if (in_array($group,self::$groups) || in_array('ALL',self::$groups)) {
 
 				$log_data = array();
-				
+				$time = timer_stop();
+				static $previous_time; // Making this static means it will be persistent.
+
 				// Report time
 				if (in_array('time',self::$parameters)) {
-					$log_data['time'] = number_format_i18n(timer_stop()*1000).'ms'; // ms
+					$log_data['time'] = number_format_i18n( $time * 1000 ).'ms'; // ms
+				}
+
+				// Report delta time
+				if (in_array('delta',self::$parameters)) {
+					$log_data['delta'] = number_format_i18n( ( $time - $previous_time ) * 1000 ).'ms'; // ms
+					$previous_time = $time;
 				}
 
 				// Report memory
 				if (in_array('memory',self::$parameters)) {
 					$memory = memory_get_peak_usage();
-					$log_data['memory'] = number_format_i18n(ceil($memory/1024)); // kb
+					$log_data['memory'] = number_format_i18n( ceil( $memory / 1024 ) ); // kb
 				}
 
 				// Report URL
@@ -166,16 +174,16 @@ if ( !class_exists('Debugger') ) {
 				if (in_array('backtrace',self::$parameters)) {
 					$log_data['backtrace'] = debug_backtrace();
 				}
-				
+
 				// Report data
 				if (in_array('data',self::$parameters) && isset($data)) {
-					$log_data['data'] = print_r( $data, true );					
+					$log_data['data'] = print_r( $data, true );
 				}
 				do_action( 'debugger_render_log_entry', $message, $group, $log_data );
 			}
 
 		}
-		
+
 		public function renderLog( $message='Log Message', $group='default', $data=null ) {
 			if (!empty($data)) {
 				error_log( "$message ($group): " . print_r( $data, true ) );

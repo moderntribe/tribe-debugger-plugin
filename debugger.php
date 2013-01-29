@@ -145,13 +145,15 @@ if ( !class_exists('Debugger') ) {
 
 				// Report time
 				if (in_array('time',self::$parameters)) {
-					$log_data['time'] = number_format_i18n( $time * 1000 ).'ms'; // ms
+					$log_data['time'] = number_format_i18n( $time * 1000 ).' ms'; // ms
 				}
 
 				// Report delta time
 				if (in_array('delta',self::$parameters)) {
-					$log_data['delta'] = number_format_i18n( ( $time - $previous_time ) * 1000 ).'ms'; // ms
-					$previous_time = $time;
+					if ( isset( $previous_time[$group] ) ) {
+						$log_data['delta'] = number_format_i18n( ( $time - $previous_time[$group] ) * 1000 ) . " ms (since last '$group')"; // ms
+					}
+					$previous_time[$group] = $time;
 				}
 
 				// Report memory

@@ -45,6 +45,13 @@ WordPress actions that you wish to log.
 
 == Changelog ==
 
+= 1.1 =
+
+* Improve loading order to ensure that production sites aren't adversely effected when no debugging is needed.
+* Update logging display.
+* Add initializer message so that it's clear when a new load has started.
+* Clean up debug bar UI a bit.
+
 = 1.0 =
 
 Initial Release.

@@ -21,8 +21,16 @@ div#debugger-debug-bar li div.debugger-debug-entry-title {
 	background-color: #eee;
 }
 
+div#debugger-debug-bar li div.debugger-debug-entry-format {
+	float: right;
+}
+
 div#debugger-debug-bar li div.debugger-debug-entry-data {
 	padding: 10px;
+}
+
+div#debugger-debug-bar li div.debugger-debug-entry-data table th {
+	padding-right: 20px;
 }
 
 div#debugger-debug-bar li.debugger-debug-warning,

@@ -88,44 +88,51 @@ if ( !class_exists('Debugger') ) {
 		// Constructor
 		public function __construct() {
 			// Set logger to default to error_log.
-			add_action( 'debugger_render_log_entry', array( $this, 'renderLog' ), 10, 3 );
-
-			// Action for people to log messages to.
-			add_action( 'log', array( $this, 'log' ), 1, 3 );
+			add_action( 'debugger_render_log_entry', array( $this, 'render_log' ), 10, 3 );
 
 			// Set up vars once plugins are loaded.
-			add_action( 'plugins_loaded', array( $this, 'setUpVars' ), 10 );
+			add_action( 'plugins_loaded', array( $this, 'start_the_party' ), 10 );
 		}
 
 		// Set up vars
-		public function setUpVars() {
+		public function start_the_party() {
 
 			// Check to see if wp-config has defined any of the vars
 			if (defined('DEBUG_GROUPS')) {
 				self::$groups = apply_filters('debugger_groups',explode(',',DEBUG_GROUPS));
 			}
+			if ( empty( self::$groups ) ) return;
+
 			if (defined('DEBUG_PARAMS')) {
 				self::$parameters = apply_filters('debugger_params',explode(',',DEBUG_PARAMS));
 			}
+
 			if (defined('DEBUG_ACTIONS')) {
 				self::$actions = apply_filters('debugger_actions',explode(',',DEBUG_ACTIONS));
 			}
+
 			if (defined('DEBUG_URLS')) {
 				self::$ok_urls = apply_filters('debugger_urls',explode(',',DEBUG_URLS));
 			}
+			if ( is_array(self::$ok_urls) && !in_array($_SERVER["HTTP_HOST"],self::$ok_urls) ) return;
 
 			// Hook into all the actions in the config
 			if (is_array(self::$actions) && count(self::$actions)>0) {
 				foreach (self::$actions as $k => $action) {
-					add_action($action,array($this,'autoLogAction'),1,2);
+					add_action($action,array($this,'autolog_action'),1,2);
 				}
 			}
 
+			// Action for people to log messages to.
+			add_action( 'log', array( $this, 'log' ), 1, 3 );
+
 			require_once('lib/debug-bar.class.php');
+
+			do_action( 'debugger_render_log_entry', '===== INITIALIZING DEBUGGER =====' );
 		}
 
 		// Log the actions/filters
-		public function autoLogAction() {
+		public function autolog_action() {
 			self::log('Action: '.current_filter(),'ACTIONS');
 		}
 
@@ -186,12 +193,19 @@ if ( !class_exists('Debugger') ) {
 
 		}
 
-		public function renderLog( $message='Log Message', $group='default', $data=null ) {
+		public function render_log( $message='Log Message', $group='', $data=null ) {
+
+			if ( !empty( $group ) ) $message .= " ($group)";
+
 			if (!empty($data)) {
-				error_log( "$message ($group): " . print_r( $data, true ) );
-			} else {
-				error_log( "$message ($group)" );
+				if ( count( self::$parameters ) > 1 ) {
+					$message .= ': ' . print_r( $data, true );
+				} else {
+					$message .= ': ' . array_shift( $data );
+				}
 			}
+
+			error_log( $message );
 		}
 
 	}

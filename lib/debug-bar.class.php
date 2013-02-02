@@ -13,12 +13,12 @@ function load_debugger_debug_bar($panels) {
 		class DebuggerDebugBar extends Debug_Bar_Panel {
 
 			private static $debug_log = array();
-			
+
 			function init() {
 				$this->title( __('Debugger', Debugger::PLUGIN_DOMAIN) );
-				remove_action( 'debugger_render_log_entry',array( Debugger::instance(), 'renderLog' ), 11, 3 );				
+				remove_action( 'debugger_render_log_entry',array( Debugger::instance(), 'renderLog' ), 11, 3 );
 				add_action( 'debugger_render_log_entry', array( $this, 'logDebug' ), 12, 3 );
-				wp_enqueue_style( 'debugger_css', plugins_url('resources/debugger-debug-bar.css', dirname(__FILE__)) );				
+				wp_enqueue_style( 'debugger_css', plugins_url('resources/debugger-debug-bar.css', dirname(__FILE__)), array(), '1.1' );
 			}
 
 			function prerender() {
@@ -31,11 +31,31 @@ function load_debugger_debug_bar($panels) {
 					echo '<ul>';
 					foreach(self::$debug_log as $k => $logentry) {
 						echo "<li class='debugger-debug-item debugger-debug-{$logentry['format']}'>";
-						echo "<div class='debugger-debug-entry-title'>{$logentry['title']}</div>";
-						if (isset($logentry['data']) && $logentry['data']) {
-							echo '<div class="debugger-debug-entry-data"><pre>';
-							print_r($logentry['data']);
-							echo '</pre></div>';
+						echo "<div class='debugger-debug-entry-title'>";
+						echo $logentry['title'];
+						if ( $logentry['format'] != 'log' ) {
+							echo " <span class='debugger-debug-entry-format'>{$logentry['format']}</span>";
+						}
+						echo "</div>";
+						if (isset($logentry['data']) && !empty($logentry['data'])) {
+							echo '<div class="debugger-debug-entry-data">';
+							echo '<table>';
+							foreach($logentry['data'] as $k => $v) {
+								echo '<tr>';
+								echo "<th>{$k}</th>\n";
+								echo '<td>';
+								if ( is_array($v) || is_object($v) ) {
+									echo '<pre>';
+									print_r($v);
+									echo '</pre>';
+								} else {
+									echo $v;
+								}
+								echo '</td>';
+								echo '</tr>';
+							}
+							echo '</table>';
+							echo '</div>';
 						}
 						echo '</li>';
 					}

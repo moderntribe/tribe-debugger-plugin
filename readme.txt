@@ -30,16 +30,18 @@ WordPress actions that you wish to log.
 
 `define( 'DEBUG_ACTIONS', 'wp_head,switch_theme,wp_footer' );`
 
-WordPress actions that you wish to log.
+Optional restriction by URL (useful on MU installs).
 
 `define( 'DEBUG_URLS', 'myurl.com' );`
 
 = Todo =
 
-* admin panel per site
-* admin panel globally
-* wordpress error logging
-* sql query logging
+* Rename 'delta' to 'timedelta' and add a 'memorydelta'
+* Add variable for sample rate so that this could run randomly on production installs
+* Admin panel per site
+* Admin panel globally
+* WordPress error logging
+* Mysql query logging
 * WP_Error integration
 * Alerts ex: if this takes more than this much memory then log it...
 

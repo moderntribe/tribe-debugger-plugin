@@ -3,7 +3,7 @@
 Plugin Name:	Debugger Plugin
 Description:	Code for debugging code
 Author:			Modern Tribe, Inc.
-Version:		1.1
+Version:		1.2
 Author URI:		http://tri.be
 
 Usage:
@@ -21,7 +21,7 @@ To render messages to the log, you must configure wp-config.php as follows:
 define( 'DEBUG_GROUPS', 'ACTIONS,default,myspecialgroup' );
 
 // Display these outputs in the log for each log message.
-define( 'DEBUG_PARAMS', 'time,delta,memory,data,backtrace,url,server' );
+define( 'DEBUG_PARAMS', 'time,timedelta,memory,memorydelta,data,backtrace,url,server' );
 
 // WordPress actions that you wish to log.
 define( 'DEBUG_ACTIONS', 'wp_head,switch_theme,wp_footer' );
@@ -81,9 +81,14 @@ if ( !class_exists('Debugger') ) {
 		private static $parameters = array('time','memory','data','backtrace','url','server');
 		private static $actions = array('wp_head','switch_theme','wp_footer');*/
 		private static $groups = array( 'ALL' );
-		private static $parameters = array( 'time', 'delta', 'memory', 'data', 'backtrace', 'url', 'server' );
+		private static $parameters = array( 'time', 'timedelta', 'memory', 'memorydelta', 'data', 'backtrace', 'url', 'server' );
 		private static $actions = array();
 		private static $ok_urls = false;
+
+		private $time;
+		private $time_previous;
+		private $memory;
+		private $memory_previous;
 
 		// Constructor
 		public function __construct() {
@@ -131,6 +136,18 @@ if ( !class_exists('Debugger') ) {
 			do_action( 'debugger_render_log_entry', '===== INITIALIZING DEBUGGER =====' );
 		}
 
+		private function get_time() {
+			global $timestart;
+			$timeend = microtime( true );
+			if ( !$this->time )
+				$this->time = ($timeend - $timestart) * 1000;
+		}
+
+		private function get_memory() {
+			if ( !$this->memory )
+				$this->memory = ceil( memory_get_usage(true) / 1024 ); // kb
+		}
+
 		// Log the actions/filters
 		public function autolog_action() {
 			self::log('Action: '.current_filter(),'ACTIONS');
@@ -147,27 +164,40 @@ if ( !class_exists('Debugger') ) {
 			if (in_array($group,self::$groups) || in_array('ALL',self::$groups)) {
 
 				$log_data = array();
-				$time = timer_stop();
-				static $previous_time; // Making this static means it will be persistent.
 
 				// Report time
 				if (in_array('time',self::$parameters)) {
-					$log_data['time'] = number_format_i18n( $time * 1000 ).' ms'; // ms
+					$this->get_time();
+					$log_data['time'] = number_format_i18n( $this->time ).' ms'; // ms
 				}
 
 				// Report delta time
-				if (in_array('delta',self::$parameters)) {
-					if ( isset( $previous_time[$group] ) ) {
-						$log_data['delta'] = number_format_i18n( ( $time - $previous_time[$group] ) * 1000 ) . " ms (since last '$group')"; // ms
+				if (in_array('timedelta',self::$parameters)) {
+					$this->get_time();
+					if ( isset( $this->time_previous[$group] ) ) {
+						$log_data['timedelta'] = number_format_i18n( $this->time - $this->time_previous[$group] ) . " ms (since last '$group')";
 					}
-					$previous_time[$group] = $time;
+					$this->time_previous[$group] = $this->time;
 				}
+
+				$this->time = false;
 
 				// Report memory
 				if (in_array('memory',self::$parameters)) {
-					$memory = memory_get_peak_usage();
-					$log_data['memory'] = number_format_i18n( ceil( $memory / 1024 ) ); // kb
+					$this->get_memory();
+					$log_data['memory'] = number_format_i18n( $this->memory );
 				}
+
+				// Report delta memory
+				if (in_array('memorydelta',self::$parameters)) {
+					$this->get_memory();
+					if ( isset( $this->memory_previous[$group] ) ) {
+						$log_data['memorydelta'] = number_format_i18n( $this->memory - $this->memory_previous[$group] ) . " kB (since last '$group')";
+					}
+					$this->memory_previous[$group] = $this->memory;
+				}
+
+				$this->memory = false;
 
 				// Report URL
 				if (in_array('url',self::$parameters)) {

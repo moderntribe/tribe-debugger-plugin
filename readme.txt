@@ -4,7 +4,7 @@ Contributors:  ModernTribe, peterchester, jbrinley
 Tags: modern tribe, tribe, debug, debugger, profiling, profile, performance, tuning, analysis
 Requires at least: 3.0
 Tested up to: 3.6
-Stable tag: 1.1
+Stable tag: 1.2
 
 == Description ==
 
@@ -24,7 +24,7 @@ Run debug on only these groups. Use 'ALL' to debug everything. The group 'ACTION
 
 Display these outputs in the log for each log message.
 
-`define( 'DEBUG_PARAMS', 'time,delta,memory,data,backtrace,url,server' );`
+`define( 'DEBUG_PARAMS', 'time,timedelta,memory,memorydelta,data,backtrace,url,server' );`
 
 WordPress actions that you wish to log.
 
@@ -36,7 +36,6 @@ Optional restriction by URL (useful on MU installs).
 
 = Todo =
 
-* Rename 'delta' to 'timedelta' and add a 'memorydelta'
 * Add variable for sample rate so that this could run randomly on production installs
 * Admin panel per site
 * Admin panel globally
@@ -46,6 +45,10 @@ Optional restriction by URL (useful on MU installs).
 * Alerts ex: if this takes more than this much memory then log it...
 
 == Changelog ==
+
+= 1.2 =
+
+* rename 'delta' to 'timedelta' and add 'memorydelta'
 
 = 1.1 =
 

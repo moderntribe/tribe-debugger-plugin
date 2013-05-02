@@ -3,7 +3,7 @@
 Plugin Name:	Debugger Plugin
 Description:	Code for debugging code
 Author:			Modern Tribe, Inc.
-Version:		1.2
+Version:		1.3
 Author URI:		http://tri.be
 
 Usage:

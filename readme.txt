@@ -4,7 +4,7 @@ Contributors:  ModernTribe, peterchester, jbrinley
 Tags: modern tribe, tribe, debug, debugger, profiling, profile, performance, tuning, analysis
 Requires at least: 3.0
 Tested up to: 3.6
-Stable tag: 1.2
+Stable tag: 1.3
 
 == Description ==
 

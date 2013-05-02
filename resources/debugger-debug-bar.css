@@ -52,3 +52,14 @@ div#debugger-debug-bar li.debugger-debug-error {
 div#debugger-debug-bar li.debugger-debug-error div.debugger-debug-entry-title {
 	background-color: #D66;
 }
+
+div#debugger-debug-bar p.debugger-notice {
+	clear: both;
+	padding: 40px;
+	text-align: center;
+	font-size: 26px;
+	font-family: georgia,times,serif;
+	font-style: italic;
+	background: #f8f8f8;
+	color: #999;
+}

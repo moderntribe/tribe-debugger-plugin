@@ -29,6 +29,16 @@ define( 'DEBUG_ACTIONS', 'wp_head,switch_theme,wp_footer' );
 // WordPress actions that you wish to log.
 define( 'DEBUG_URLS', 'myurl.com' );
 
+// Minimum time in milliseconds required to register a log entry as being slow. Default 0 for no minumum.
+define( 'DEBUG_MIN_TIME', 500 );
+
+// Minimum memory in killobytes required to register a log entry as being heavy. Default 0 for no minumum.
+define( 'DEBUG_MIN_MEM', 1024 );
+
+// Path to log file or set to TRUE to use php error log. Default FALSE for no logging.
+define( 'DEBUG_LOG', '/path/to/writable/log/file' );
+// or
+define( 'DEBUG_LOG', TRUE );
 
 TODO:
 
@@ -74,16 +84,30 @@ if ( !class_exists('Debugger') ) {
 			return self::$instance;
 		}
 
-		const PLUGIN_DOMAIN = 'debugger';
-
 		// Debug vars
 		/*private static $groups = array('ACTIONS','default');
 		private static $parameters = array('time','memory','data','backtrace','url','server');
 		private static $actions = array('wp_head','switch_theme','wp_footer');*/
 		private static $groups = array( 'ALL' );
-		private static $parameters = array( 'time', 'timedelta', 'memory', 'memorydelta', 'data', 'backtrace', 'url', 'server' );
+		private static $parameters = array(
+			'time',
+			'timedelta',
+			'memory',
+			'memorydelta',
+			'data',
+			'backtrace',
+			'url',
+			'server'
+		);
+		private static $time_threshold = 0; // ms
+		private static $memory_threshold = 0; // kb
 		private static $actions = array();
 		private static $ok_urls = false;
+		private static $filter_blacklist = array(
+			'debugger_render_log_entry',
+			'log',
+		);
+		private static $log = false;
 
 		private $time;
 		private $time_previous;
@@ -92,39 +116,65 @@ if ( !class_exists('Debugger') ) {
 
 		// Constructor
 		public function __construct() {
-			// Set logger to default to error_log.
-			add_action( 'debugger_render_log_entry', array( $this, 'render_log' ), 10, 3 );
 
-			// Set up vars once plugins are loaded.
-			add_action( 'plugins_loaded', array( $this, 'start_the_party' ), 10 );
-		}
-
-		// Set up vars
-		public function start_the_party() {
+			if ( is_admin() ) {
+				require_once('lib/debugger-admin.class.php');
+				Debugger_Admin::init();
+			}
 
 			// Check to see if wp-config has defined any of the vars
 			if (defined('DEBUG_GROUPS')) {
 				self::$groups = apply_filters('debugger_groups',explode(',',DEBUG_GROUPS));
+			} else {
+				self::$groups = get_option( 'tribe_debugger_groups' );
 			}
 			if ( empty( self::$groups ) ) return;
 
+			if (defined('DEBUG_URLS')) {
+				self::$ok_urls = apply_filters('debugger_urls',explode(',',DEBUG_URLS));
+			} else {
+				self::$ok_urls = get_option( 'tribe_debugger_ok_urls', false );
+			}
+			if (!empty( self::$ok_urls ) && is_array( self::$ok_urls ) && !in_array( $_SERVER["HTTP_HOST"], self::$ok_urls ) ) return;
+
 			if (defined('DEBUG_PARAMS')) {
 				self::$parameters = apply_filters('debugger_params',explode(',',DEBUG_PARAMS));
+			} else {
+				self::$parameters = get_option( 'tribe_debugger_parameters', array() );
 			}
 
 			if (defined('DEBUG_ACTIONS')) {
 				self::$actions = apply_filters('debugger_actions',explode(',',DEBUG_ACTIONS));
+			} else {
+				self::$actions = get_option( 'tribe_debugger_actions', array() );
 			}
 
-			if (defined('DEBUG_URLS')) {
-				self::$ok_urls = apply_filters('debugger_urls',explode(',',DEBUG_URLS));
+			if (defined('DEBUG_MIN_TIME')) {
+				self::$time_threshold = apply_filters('debugger_min_time', DEBUG_MIN_TIME );
+			} else {
+				self::$time_threshold = get_option( 'tribe_debugger_time_threshold', 0 );
 			}
-			if ( is_array(self::$ok_urls) && !in_array($_SERVER["HTTP_HOST"],self::$ok_urls) ) return;
+
+			if (defined('DEBUG_MIN_MEM')) {
+				self::$memory_threshold = apply_filters('debugger_min_memory', DEBUG_MIN_MEM );
+			} else {
+				self::$memory_threshold = get_option( 'tribe_debugger_memory_threshold', 0 );
+			}
+
+			if (defined('DEBUG_LOG')) {
+				self::$log = apply_filters('debugger_log', DEBUG_LOG );
+			} else {
+				self::$log = get_option( 'tribe_debugger_log', 0 );
+			}
+			if ( !empty( self::$log ) ) {
+				// Set logger to default to error_log.
+				add_action( 'debugger_render_log_entry', array( $this, 'render_log' ), 10, 3 );
+			}
 
 			// Hook into all the actions in the config
-			if (is_array(self::$actions) && count(self::$actions)>0) {
-				foreach (self::$actions as $k => $action) {
-					add_action($action,array($this,'autolog_action'),1,2);
+			if ( is_array( self::$actions ) && count( self::$actions ) > 0 ) {
+				foreach ( self::$actions as $action ) {
+					add_action( $action, array( $this, 'autolog_action' ), 1, 2 );
 				}
 			}
 
@@ -132,13 +182,13 @@ if ( !class_exists('Debugger') ) {
 			add_action( 'log', array( $this, 'log' ), 1, 3 );
 
 			require_once('lib/debug-bar.class.php');
-
 			do_action( 'debugger_render_log_entry', '===== INITIALIZING DEBUGGER =====' );
 		}
 
 		private function get_time() {
 			global $timestart;
 			$timeend = microtime( true );
+
 			if ( !$this->time )
 				$this->time = ($timeend - $timestart) * 1000;
 		}
@@ -150,54 +200,72 @@ if ( !class_exists('Debugger') ) {
 
 		// Log the actions/filters
 		public function autolog_action() {
-			self::log('Action: '.current_filter(),'ACTIONS');
+			if ( !in_array( current_filter(), self::$filter_blacklist ) ) {
+				self::log(current_filter(),'ACTIONS');
+			}
 		}
 
 		// Log messages
-		public function log($message='Log Message',$group='default',$data=null) {
-			// If URLs are specified then check that the logging url matches the url specified
-			if (is_array(self::$ok_urls) && !in_array($_SERVER["HTTP_HOST"],self::$ok_urls)) {
-				return;
-			}
+		public function log( $message = 'Log Message', $group = 'default', $data = null ) {
 
 			// Check to see if group reporting is set in config
-			if (in_array($group,self::$groups) || in_array('ALL',self::$groups)) {
+			if ( in_array( $group, self::$groups ) || in_array( 'ALL', self::$groups ) ) {
 
 				$log_data = array();
 
-				// Report time
-				if (in_array('time',self::$parameters)) {
-					$this->get_time();
-					$log_data['time'] = number_format_i18n( $this->time ).' ms'; // ms
-				}
+				$log_time = in_array('time',self::$parameters);
+				$log_time_delta = in_array('timedelta',self::$parameters);
+				$log_mem = in_array('memory',self::$parameters);
+				$log_mem_delta = in_array('memorydelta',self::$parameters);
 
-				// Report delta time
-				if (in_array('timedelta',self::$parameters)) {
+				if ( $log_time || $log_time_delta ) {
 					$this->get_time();
-					if ( isset( $this->time_previous[$group] ) ) {
-						$log_data['timedelta'] = number_format_i18n( $this->time - $this->time_previous[$group] ) . " ms (since last '$group')";
+					$time_delta = ( isset( $this->time_previous[$group] ) ) ? $this->time - $this->time_previous[$group] : 0;
+
+					if ( $time_delta >= self::$time_threshold ) {
+
+						// Report time
+						if ( $log_time ) {
+							$log_data['time'] = $this->time; // ms
+						}
+
+						// Report delta time
+						if ( $log_time_delta && $time_delta ) {
+							$log_data['timedelta'] = $time_delta; // ms
+						}
+
 					}
 					$this->time_previous[$group] = $this->time;
 				}
-
 				$this->time = false;
 
-				// Report memory
-				if (in_array('memory',self::$parameters)) {
+				if ( $log_mem || $log_mem_delta ) {
 					$this->get_memory();
-					$log_data['memory'] = number_format_i18n( $this->memory );
-				}
+					$memory_delta = ( isset( $this->memory_previous[$group] ) ) ? $this->memory - $this->memory_previous[$group] : 0;
 
-				// Report delta memory
-				if (in_array('memorydelta',self::$parameters)) {
-					$this->get_memory();
-					if ( isset( $this->memory_previous[$group] ) ) {
-						$log_data['memorydelta'] = number_format_i18n( $this->memory - $this->memory_previous[$group] ) . " kB (since last '$group')";
+					if ( $memory_delta >= self::$memory_threshold ) {
+
+						// Report time
+						if ( $log_mem ) {
+							$log_data['memory'] = $this->memory; // kb
+						}
+
+						// Report delta time
+						if ( $log_mem_delta && $memory_delta ) {
+							$log_data['memorydelta'] = $memory_delta; //kb
+						}
+
 					}
 					$this->memory_previous[$group] = $this->memory;
 				}
-
 				$this->memory = false;
+
+
+				// @TODO: backtrace here to see if this is a plugin and if so then what?
+
+				if ( empty($log_data) ) {
+					return;
+				}
 
 				// Report URL
 				if (in_array('url',self::$parameters)) {
@@ -211,7 +279,8 @@ if ( !class_exists('Debugger') ) {
 
 				// Report Backtrace
 				if (in_array('backtrace',self::$parameters)) {
-					$log_data['backtrace'] = debug_backtrace();
+					//$log_data['backtrace'] = debug_backtrace();
+					$log_data['backtrace'] = wp_debug_backtrace_summary(null,3,false);
 				}
 
 				// Report data
@@ -223,19 +292,55 @@ if ( !class_exists('Debugger') ) {
 
 		}
 
+		public function format_item( $type, $value, $html = false ) {
+			switch ( $type ) {
+				case 'time' :
+				case 'timedelta' :
+					$value = number_format( floatval( $value ) ).' ms';
+					break;
+				case 'memory' :
+				case 'memorydelta' :
+					$value = number_format( floatval( $value ) ).' kB';
+					break;
+				case 'backtrace' :
+					if ( $html ) {
+						$value = sprintf( '<ol><li>%s</li></ol>', join('</li><li>', $value ) );
+					} else {
+						$value = var_export( $value, true );
+					}
+					break;
+				case 'data' :
+					if ( is_array( $value ) || is_object( $value ) ) {
+						if ( $html ) {
+							$value = sprintf( '<pre>%s</pre>', var_export( $value, true ) );
+						} else {
+							$value = var_export( $value, true );
+						}
+					}
+			}
+
+			return $value;
+		}
+
 		public function render_log( $message='Log Message', $group='', $data=null ) {
 
 			if ( !empty( $group ) ) $message .= " ($group)";
 
 			if (!empty($data)) {
 				if ( count( self::$parameters ) > 1 ) {
-					$message .= ': ' . print_r( $data, true );
+					foreach ( $data as $k => $v ) {
+						$message .= '	' . $this->format_item( $k, $v );
+					}
 				} else {
-					$message .= ': ' . array_shift( $data );
+					$message .= '	' . $this->format_item( self::$parameters[0], $data[0] );
 				}
 			}
 
-			error_log( $message );
+			if ( is_string( self::$log ) && file_exists( self::$log ) ) {
+				error_log( $message, 3, self::$log );
+			} else {
+				error_log( $message );
+			}
 		}
 
 	}

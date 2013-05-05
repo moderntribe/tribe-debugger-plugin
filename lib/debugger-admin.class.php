@@ -64,7 +64,7 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 
 			add_settings_section(
 				'default',
-				__( 'Debugger Configuration', 'tribe-debugger' ),
+				'',
 				array($this, 'display_settings_section'),
 				self::$slug
 			);
@@ -120,11 +120,9 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 		}
 
 		public function display_settings_page() {
-
-			screen_icon(empty($screen_icon)?'options-general':$screen_icon); ?>
-			<h2><?php echo self::$plugin_name; ?></h2>
-			<div class="wrap">
-			<?php
+			echo '<div class="wrap">';
+			screen_icon(empty($screen_icon)?'options-general':$screen_icon);
+			echo '<h2>'.self::$plugin_name.'</h2>';
 			echo "<form action='".admin_url('options.php')."' method='post'>";
 			settings_fields( self::$slug );
 			do_settings_sections( self::$slug );
@@ -157,7 +155,8 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 
 		public function display_groups_field() {
 			$current = join( "\n", get_option( 'tribe_debugger_groups', array('ALL') ) );
-			?><p><textarea name="tribe_debugger_groups"><?php echo $current; ?></textarea></p><?php
+			?><p><textarea name="tribe_debugger_groups" id="tribe_debugger_groups" rows="10"><?php echo $current; ?></textarea></p>
+			<p class="description"><?php _e('Enter the custom groups that you would like to debug (one per line). You can also enter "ACTIONS" to profile actions or "ALL" to debug all groups and whatever actions you specify in the actions field.'); ?></p><?php
 		}
 
 		public function display_parameters_field() {
@@ -171,27 +170,31 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 			<p><input type='checkbox' name="tribe_debugger_parameters[]" value="backtrace" <?php checked( in_array('backtrace',$current), true ); ?> /> <?php _e('Backtrace', 'tribe-debugger'); ?></p>
 			<p><input type='checkbox' name="tribe_debugger_parameters[]" value="url" <?php checked( in_array('url',$current), true ); ?> /> <?php _e('URL', 'tribe-debugger'); ?></p>
 			<p><input type='checkbox' name="tribe_debugger_parameters[]" value="server" <?php checked( in_array('server',$current), true ); ?> /> <?php _e('Server', 'tribe-debugger'); ?></p>
-			<?php
+			<p class="description"><?php _e('Select what parameters you would like to debug specifically. Note that the time or time delta parameters must be selected for the time threshold to be considered. Likewise for memory / memory diff and the memory threshold.'); ?></p><?php
 		}
 
 		public function display_time_threshold_field() {
 			$current = intval( get_option( 'tribe_debugger_time_threshold', 0 ) );
-			?><p><input type="text" name="tribe_debugger_time_threshold" value="<?php echo $current; ?>" /></p><?php
+			?><p><input type="text" name="tribe_debugger_time_threshold" id="tribe_debugger_time_threshold" class="small-text" value="<?php echo $current; ?>" /></p>
+			<p class="description"><?php _e('If the time or time delta parameters are selected, this field will filter entries to log only those that are slower than the time specified. Example: If you set this to 500ms, then only items that are slower than 500ms will be logged.'); ?></p><?php
 		}
 
 		public function display_memory_threshold_field() {
 			$current = intval( get_option( 'tribe_debugger_memory_threshold', 0 ) );
-			?><p><input type="text" name="tribe_debugger_memory_threshold" value="<?php echo $current; ?>" /></p><?php
+			?><p><input type="text" name="tribe_debugger_memory_threshold" id="tribe_debugger_memory_threshold" class="small-text" value="<?php echo $current; ?>" /></p>
+			<p class="description"><?php _e('If the memory or memory delta parameters are selected, this field will filter entries to log only those that take more memory than the memory specified. Example: If you set this to 1025kB, then only items that cause an increase of over 1024kB will be logged.'); ?></p><?php
 		}
 
 		public function display_actions_field() {
 			$current = join( "\n", get_option( 'tribe_debugger_actions', array() ) );
-			?><p><textarea name="tribe_debugger_actions"><?php echo $current; ?></textarea></p><?php
+			?><p><textarea name="tribe_debugger_actions" id="tribe_debugger_actions" rows="10"><?php echo $current; ?></textarea></p>
+			<p class="description"><?php _e('Enter hooks, actions or filters, that you would like to profile specifically (one per line). Note that the Debug Groups field must either be set to "ACTIONS" or "ALL" for this field to have any effect.'); ?></p><?php
 		}
 
 		public function display_ok_urls_field() {
 			$current = join( "\n", get_option( 'tribe_debugger_ok_urls', array() ) );
-			?><p><textarea name="tribe_debugger_ok_urls"><?php echo $current; ?></textarea></p><?php
+			?><p><textarea name="tribe_debugger_ok_urls" id="tribe_debugger_ok_urls" rows="10"><?php echo $current; ?></textarea></p>
+			<p class="description"><?php _e('If you are using this on a multisite install, you can enter urls here that will be whitelisted so that this only takes effect on those urls (one per line).'); ?></p><?php
 		}
 
 		private function admin_url() {

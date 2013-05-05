@@ -33,71 +33,6 @@ function load_debugger_debug_bar($panels) {
 			}
 
 			function render() {
-				?>
-				<style>
-					#debugger-debug-bar table {
-						clear: both;
-						width: 100%;
-						cellspacing: 0;
-						cellborder: 0;
-						border-spacing: 0;
-					}
-					#debugger-debug-bar th {
-						background-color: #f1f1f1;
-						background-image: -ms-linear-gradient(top, #f9f9f9, #dfdfdf);
-						background-image: -moz-linear-gradient(top, #f9f9f9, #dfdfdf);
-						background-image: -o-linear-gradient(top, #f9f9f9, #dfdfdf);
-						background-image: -webkit-gradient(linear, left top, left bottom, from(#f9f9f9), to(#dfdfdf));
-						background-image: -webkit-linear-gradient(top, #f9f9f9, #dfdfdf);
-						background-image: linear-gradient(top, #f9f9f9, #dfdfdf);
-						border-bottom: 1px solid rgba(0,0,0,0.17);
-						border-top: 1px solid rgba(255,255,255,0.2);
-						border-left: 1px solid rgba(255,255,255,0.2);
-						border-right: 1px solid rgba(0,0,0,0.04);
-					}
-					#debugger-debug-bar td {
-						border-top: 1px solid rgba(255,255,255,0.2);
-						border-left: 1px solid rgba(255,255,255,0.2);
-						border-bottom: 1px solid rgba(0,0,0,0.04);
-						border-right: 1px solid rgba(0,0,0,0.04);
-					}
-					#debugger-debug-bar td, #debugger-debug-bar th {
-						padding: 10px;
-					}
-					#debugger-debug-bar td.debugger-debug-entry-data {
-						width: 10%;
-					}
-					td.debugger-debug-entry-data {
-						text-align: right;
-					}
-					td.debugger-debug-entry-data-backtrace, td.debugger-debug-entry-data-data {
-						text-align: left;
-					}
-					tr.debugger-debug-row {
-						border-top: solid 1px rgba(0,0,0,0.1);
-					}
-					tr.debugger-debug-row-color-0 {
-						color: rgb(241, 154, 0);
-						background-color: rgba(241, 154, 0, 0.1);
-					}
-					tr.debugger-debug-row-color-1 {
-						color: rgb(0, 134, 209);
-						background-color: rgba(0, 134, 209, 0.1);
-					}
-					tr.debugger-debug-row-color-2 {
-						color: rgb(159, 209, 0);
-						background-color: rgba(159, 209, 0, 0.1);
-					}
-					tr.debugger-debug-row-color-3 {
-						color: rgb(177, 60, 255);
-						background-color: rgba(177, 60, 255, 0.1);
-					}
-					tr.debugger-debug-row-color-4 {
-						color: rgb(255, 235, 0);
-						background-color: rgba(255, 235, 0, 0.1);
-					}
-				</style>
-				<?php
 				echo '<div id="debugger-debug-bar">';
 				$time = timer_stop(0);
 				$memory = number_format_i18n( ceil( memory_get_usage(true) / 1048576 ) ); // Mb
@@ -128,9 +63,7 @@ function load_debugger_debug_bar($panels) {
 						printf( '<td class="debugger-debug-entry-%s">%s</td>', 'title', $logentry['title'] );
 						foreach ( $cols as $c ) {
 							$v = ( isset( $logentry['data'][$c] ) ) ? $logentry['data'][$c] : '';
-
 							$v = self::$debugger->format_item( $c, $v, true );
-
 							printf( '<td class="debugger-debug-entry-data-%s debugger-debug-entry-data">%s</td>', $c, $v );
 						}
 						echo '</tr>';

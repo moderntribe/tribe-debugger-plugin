@@ -211,6 +211,8 @@ if ( !class_exists('Debugger') ) {
 			// Check to see if group reporting is set in config
 			if ( in_array( $group, self::$groups ) || in_array( 'ALL', self::$groups ) ) {
 
+				$log_this = false; // start by assuming this log entry should not be saved.
+
 				$log_data = array();
 
 				$log_time = in_array('time',self::$parameters);
@@ -222,19 +224,21 @@ if ( !class_exists('Debugger') ) {
 					$this->get_time();
 					$time_delta = ( isset( $this->time_previous[$group] ) ) ? $this->time - $this->time_previous[$group] : 0;
 
+					// If this passes the time test, then log it.
 					if ( $time_delta >= self::$time_threshold ) {
-
-						// Report time
-						if ( $log_time ) {
-							$log_data['time'] = $this->time; // ms
-						}
-
-						// Report delta time
-						if ( $log_time_delta && $time_delta ) {
-							$log_data['timedelta'] = $time_delta; // ms
-						}
-
+						$log_this = true;
 					}
+
+					// Report time
+					if ( $log_time ) {
+						$log_data['time'] = $this->time; // ms
+					}
+
+					// Report delta time
+					if ( $log_time_delta ) {
+						$log_data['timedelta'] = $time_delta; // ms
+					}
+
 					$this->time_previous[$group] = $this->time;
 				}
 				$this->time = false;
@@ -243,19 +247,21 @@ if ( !class_exists('Debugger') ) {
 					$this->get_memory();
 					$memory_delta = ( isset( $this->memory_previous[$group] ) ) ? $this->memory - $this->memory_previous[$group] : 0;
 
+					// If this passes the memory test, then log it.
 					if ( $memory_delta >= self::$memory_threshold ) {
-
-						// Report time
-						if ( $log_mem ) {
-							$log_data['memory'] = $this->memory; // kb
-						}
-
-						// Report delta time
-						if ( $log_mem_delta && $memory_delta ) {
-							$log_data['memorydelta'] = $memory_delta; //kb
-						}
-
+						$log_this = true;
 					}
+
+					// Report memory
+					if ( $log_mem ) {
+						$log_data['memory'] = $this->memory; // kb
+					}
+
+					// Report delta memory
+					if ( $log_mem_delta ) {
+						$log_data['memorydelta'] = $memory_delta; //kb
+					}
+
 					$this->memory_previous[$group] = $this->memory;
 				}
 				$this->memory = false;
@@ -263,7 +269,7 @@ if ( !class_exists('Debugger') ) {
 
 				// @TODO: backtrace here to see if this is a plugin and if so then what?
 
-				if ( empty($log_data) ) {
+				if ( ( $log_time || $log_time_delta || $log_mem || $log_mem_delta ) && !$log_this ) {
 					return;
 				}
 
@@ -284,8 +290,8 @@ if ( !class_exists('Debugger') ) {
 				}
 
 				// Report data
-				if (in_array('data',self::$parameters) && isset($data)) {
-					$log_data['data'] = print_r( $data, true );
+				if (in_array('data',self::$parameters)) {
+					$log_data['data'] = ( isset($data) ) ? $data : '';
 				}
 				do_action( 'debugger_render_log_entry', $message, $group, $log_data );
 			}

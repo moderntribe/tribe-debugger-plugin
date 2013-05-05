@@ -150,7 +150,7 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 				$data = array();
 			}
 			if ( !is_array( $data ) ) {
-				$data = explode( "\n", $data );
+				$data = array_map('trim',explode("\n",$data));
 			}
 			return $data;
 		}

@@ -41,7 +41,7 @@ function load_debugger_debug_bar($panels) {
 				if (count(self::$debug_log)) {
 					echo '<table>';
 					echo '<tr>';
-					printf( '<th>%s</th>', __('Format') );
+					printf( '<th>%s</th>', __('Group') );
 					printf( '<th>%s</th>', __('Title') );
 
 					$cols = array_unique(self::$columns);

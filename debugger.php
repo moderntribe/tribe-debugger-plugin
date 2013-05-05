@@ -42,13 +42,11 @@ define( 'DEBUG_LOG', TRUE );
 
 TODO:
 
-* admin panel per site
-* admin panel globally
-* wordpress error logging
-* sql query logging
+* Test and update for MU (network active global testing vs local blog testing)
+* Offer the option to log to the WP error log.
+* Offer sql query logging
 * WP_Error integration
-* Alerts ex: if this takes more than this much memory then log it...
-
+* Summary mode - to collect a history of logging and try and find patterns over many loads.
 */
 
 // Block direct requests

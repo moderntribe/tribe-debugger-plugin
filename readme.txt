@@ -62,7 +62,19 @@ or
 * WP_Error integration
 * Alerts ex: if this takes more than this much memory then log it...
 
+== Screenshots ==
+
+1. Use the debugger to track how much time or memory hooks or benchmarked parts of code take to execute.
+2. Configure your test parameters in wp-config.php or right in the admin.
+3. Use the debugger to dump stack traces or pass data to see what the data looks like.
+
 == Changelog ==
+
+= 1.4 =
+
+* Bug fixes
+* Add screenshots
+* Tune CSS performance in debug bar
 
 = 1.3 =
 

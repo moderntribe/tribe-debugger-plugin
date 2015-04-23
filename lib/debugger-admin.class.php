@@ -34,7 +34,7 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 		 * Load network settings page.
 		 */
 		public function network_options_page_view() {
-			screen_icon(empty($screen_icon)?'options-general':$screen_icon); ?>
+			?>
 			<h2><?php echo self::$plugin_name; ?></h2>
 			<div class="wrap">
 			<?php
@@ -121,7 +121,6 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 
 		public function display_settings_page() {
 			echo '<div class="wrap">';
-			screen_icon(empty($screen_icon)?'options-general':$screen_icon);
 			echo '<h2>'.self::$plugin_name.'</h2>';
 			echo "<form action='".admin_url('options.php')."' method='post'>";
 			settings_fields( self::$slug );
@@ -161,6 +160,7 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 
 		public function display_parameters_field() {
 			$current = get_option( 'tribe_debugger_parameters', array() );
+			if ( empty($current) ) $current = array();
 			?>
 			<p><input type='checkbox' name="tribe_debugger_parameters[]" value="time" <?php checked( in_array('time',$current), true ); ?> /> <?php _e('Time', 'tribe-debugger'); ?></p>
 			<p><input type='checkbox' name="tribe_debugger_parameters[]" value="timedelta" <?php checked( in_array('timedelta',$current), true ); ?> /> <?php _e('Time Delta', 'tribe-debugger'); ?></p>
@@ -195,10 +195,6 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 			$current = join( "\n", get_option( 'tribe_debugger_ok_urls', array() ) );
 			?><p><textarea name="tribe_debugger_ok_urls" id="tribe_debugger_ok_urls" rows="10"><?php echo $current; ?></textarea></p>
 			<p class="description"><?php _e('If you are using this on a multisite install, you can enter urls here that will be whitelisted so that this only takes effect on those urls (one per line).'); ?></p><?php
-		}
-
-		private function admin_url() {
-			return add_query_arg(array('page' => self::$slug), admin_url('options-general.php'));
 		}
 
 		/********** Singleton *************/

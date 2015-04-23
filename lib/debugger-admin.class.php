@@ -196,11 +196,7 @@ if ( class_exists( 'Debugger' ) && !class_exists( 'Debugger_Admin' ) ) {
 			?><p><textarea name="tribe_debugger_ok_urls" id="tribe_debugger_ok_urls" rows="10"><?php echo $current; ?></textarea></p>
 			<p class="description"><?php _e('If you are using this on a multisite install, you can enter urls here that will be whitelisted so that this only takes effect on those urls (one per line).'); ?></p><?php
 		}
-
-		private function admin_url() {
-			return add_query_arg(array('page' => self::$slug), admin_url('options-general.php'));
-		}
-
+		
 		/********** Singleton *************/
 
 		/**

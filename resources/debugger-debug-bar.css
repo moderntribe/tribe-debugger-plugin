@@ -122,3 +122,17 @@ div#debugger-debug-bar .debugger-notice {
 	background: #f8f8f8;
 	color: #999;
 }
+
+/* Misc */
+
+#querylist p.debugger-debug-settings-link {
+	float: right;
+	margin-top: 30px;
+}
+
+#querylist p.debugger-debug-settings-link a {
+	text-decoration: none !important;
+	color: rgb(255, 255, 255) !important;
+	padding: 16px;
+	line-height: 0;
+}

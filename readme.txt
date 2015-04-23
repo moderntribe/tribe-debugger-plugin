@@ -70,6 +70,10 @@ or
 
 == Changelog ==
 
+= 1.5 =
+
+* Added link to settings from the debug bar.
+
 = 1.4 =
 
 * Bug fixes

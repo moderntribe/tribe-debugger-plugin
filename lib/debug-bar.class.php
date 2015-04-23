@@ -38,6 +38,7 @@ function load_debugger_debug_bar($panels) {
 				$memory = number_format_i18n( ceil( memory_get_usage(true) / 1048576 ) ); // Mb
 				printf( '<h2><span>%s</span>%s seconds</h2>', __('Total Execution Time:'), $time );
 				printf( '<h2><span>%s</span>%s Mb</h2>', __('Total Memory:'), $memory );
+				printf( '<p class="debugger-debug-settings-link"><a class="button button-primary" href="/wp-admin/options-general.php?page=debugger">%s</a></p>', __('Debugger Settings'));
 				if (count(self::$debug_log)) {
 					echo '<table>';
 					echo '<tr>';
